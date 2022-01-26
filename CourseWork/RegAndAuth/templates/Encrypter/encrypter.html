@@ -1,0 +1,34 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>encrypter</title>
+<!--    указываем ссылку на css file-->
+    <link rel="stylesheet" href="{% static 'RegAndAuth/css/encrypter.css' %}">
+</head>
+<body>
+    <h1>Шифр Виженера</h1>
+<div id="wrapper">
+   <form id="EncrypterUI" method="POST" action="Encr/">
+       {% csrf_token %}
+       <input type="text" id="Log" name="Log" placeholder="Введите свой Логин: " />
+       <input type="password" id="pass" name="pass" placeholder="Введите свой Пароль: " />
+       {{form.Mess}}
+       {{form.Key}}
+       {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <br {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</br>
+                {% endfor %}
+            </ul>
+        {% endif %}
+       <button type="submit" id="butt" onclick="clickEncButton">Зашифровать</button>
+       <a href="http://127.0.0.1:8000/" id="toRegistration">Выход</a>
+   </form>
+</div>
+</body>
+</html>
