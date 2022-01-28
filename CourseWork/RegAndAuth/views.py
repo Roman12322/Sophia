@@ -5,10 +5,15 @@ from .forms import ShiphrForm
 from .models import Message
 from django.db.utils import IntegrityError
 from django.contrib import messages
+from django.core.files import File
+import os
 
 
 def showRegHTML(request):
     return render(request, 'Registration/registration.html')
+
+def showCheckMessagesHTML(request):
+    return render(request, 'CheckMessages/checkmessages.html')
 
 def signUpUser(request):
     try:
@@ -36,92 +41,109 @@ def showEncrypterHTML(request):
     return render(request, 'Encrypter/encrypter.html', data)
 
 def Encr(request):
-    form = ShiphrForm(request.POST)
+    form = ShiphrForm(request.POST, request.FILES or None)
     if request.method == "POST" and form.is_valid():
         username = request.POST.get("Log")
         password = request.POST.get("pass")
+
         try:
             checkUserLogin = User.objects.get(Login=username, Password=password)
-            if checkUserLogin is not None:
-                msg = form.cleaned_data['Mess']
-                key = form.cleaned_data['Key']
-                mapped_key = msg_and_key(msg, key)
-                EncMes = cipher_encryption(msg, mapped_key)
-                tmp = Message.objects.create(EncryptMessage=EncMes, Mess=msg, Username_Id=checkUserLogin.id)
-                messages.success(request, "Your encrypted message: "+EncMes)
-                return HttpResponseRedirect("http://127.0.0.1:8000/encrypter")
+            rb = request.POST.get("RB", None)
+            if rb in ["Decrypt", "Encrypt"]:
+                if rb == "Encrypt":
+                    if checkUserLogin is not None:
+                        ChosenFile = request.FILES['chosenFile']
+                        chosenFile = ChosenFile.name
+                        path = os.path.abspath(chosenFile)
+                        chsFile = open(path, 'a')
+                        myfile = File(chsFile)
+                        msg = form.cleaned_data['Mess']
+                        key = form.cleaned_data['Key']
+                        EncMes = encrypt(msg, key)
+                        tmp = Message.objects.create(EncryptMessage=EncMes, Mess=msg, Username_Id=checkUserLogin.id)
+                        myfile.write("\nYour encrypted message: "+EncMes)
+                        myfile.closed
+                        messages.success(request, "Your encrypted message: " + EncMes)
+                        return HttpResponseRedirect("http://127.0.0.1:8000/encrypter")
+                elif rb == "Decrypt":
+                    if checkUserLogin is not None:
+                        msg = form.cleaned_data['Mess']
+                        key = form.cleaned_data['Key']
+                        try:
+                            tmp = Message.objects.filter(EncryptMessage=msg, Username_Id=checkUserLogin.id)
+                            if tmp is not None:
+                                EncMes = decrypt(msg, key)
+                                messages.success(request, "Your Decrypted message: " + EncMes)
+                                return HttpResponseRedirect("http://127.0.0.1:8000/encrypter")
+                        except Message.DoesNotExist:
+                            messages.error(request, "Message is not found")
+                            return HttpResponseRedirect("http://127.0.0.1:8000/encrypter")
         except User.DoesNotExist:
             messages.error(request, "Wrong login or password")
             return HttpResponseRedirect("http://127.0.0.1:8000/encrypter")
     return HttpResponseRedirect("http://127.0.0.1:8000/encrypter")
 
-def msg_and_key(msg, key):
-    if msg == '' or key == '':
-        key_map = 'Error'
-        return key_map
+def encrypt(message, key):
+    alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ,.!?1234567890@#$%^&*()_-" \
+               "+:;\/[]{}~`<>|"
+
+    if len(message) == 0  or len(key) == 0:
+        encrypted = "Error"
+        return encrypted
     else:
-        key_map = ""
-        j = 0
-        for i in range(len(msg)):
-            if 1040 <= ord(msg[i]) <= 1071:
-                if j < len(key):
-                    key_map += key[j].upper()
-                    j += 1
-                else:
-                    j = 0
-                    key_map += key[j].upper()
-                    j += 1
-            elif 1072 <= ord(msg[i]) <= 1103:
-                if j < len(key):
-                    key_map += key[j]
-                    j += 1
-                else:
-                    j = 0
-                    key_map += key[j]
-                    j += 1
-            else:
-                key_map += " "
-        return key_map
+        letter_to_index = dict(zip(alphabet, range(len(alphabet))))
+        index_to_letter = dict(zip(range(len(alphabet)), alphabet))
+        encrypted = ""
+        split_message = [
+            message[i : i + len(key)] for i in range(0, len(message), len(key))
+        ]
 
-def create_vigenere_table():
-    table = []
-    for i in range(32):
-        table.append([])
-    for row in range(32):
-        for column in range(32):
-            if (row + 1040) + column > 1071:
-                table[row].append(chr((row + 1040) + column - 32))
-            else:
-                table[row].append(chr((row + 1040) + column))
-    return table
+        for each_split in split_message:
+            i = 0
+            for letter in each_split:
+                number = (letter_to_index[letter] + letter_to_index[key[i]]) % len(alphabet)
+                encrypted += index_to_letter[number]
+                i += 1
 
-def create_vigenere_table_1():
-    table = []
-    for i in range(32):
-        table.append([])
-    for row in range(32):
-        for column in range(32):
-            if (row + 1072) + column > 1103:
-                table[row].append(chr((row + 1072) + column - 32))
-            else:
-                table[row].append(chr((row + 1072) + column))
-    return table
+        return encrypted
 
-def cipher_encryption(message, mapped_key):
-    table = create_vigenere_table()
-    table1 = create_vigenere_table_1()
-    encrypted_text = ""
-    if mapped_key == 'Error':
-        return encrypted_text
-    for i in range(len(message)):
-        if 1071 >= ord(message[i]) >= 1040:
-            row = ord(message[i]) - 1040
-            column = ord(mapped_key[i]) - 1040
-            encrypted_text += table[row][column]
-        elif 1072 <= ord(message[i]) <= 1103:
-            row = ord(message[i]) - 1072
-            column = ord(mapped_key[i]) - 1072
-            encrypted_text += table1[row][column]
-        else:
-            encrypted_text += message[i]
-    return encrypted_text
+def decrypt(cipher, key):
+    alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ,.!?1234567890@#$%^&*()_-" \
+               "+:;\/[]{}~`<>|"
+
+    if len(cipher) == 0  or len(key) == 0:
+        encrypted = "Error"
+        return encrypted
+    else:
+        letter_to_index = dict(zip(alphabet, range(len(alphabet))))
+        index_to_letter = dict(zip(range(len(alphabet)), alphabet))
+        decrypted = ""
+        split_encrypted = [
+            cipher[i : i + len(key)] for i in range(0, len(cipher), len(key))
+        ]
+
+        for each_split in split_encrypted:
+            i = 0
+            for letter in each_split:
+                number = (letter_to_index[letter] - letter_to_index[key[i]]) % len(alphabet)
+                decrypted += index_to_letter[number]
+                i += 1
+
+        return decrypted
+
+def CheckMessagesInDB(request):
+    if request.method == "POST":
+        username = request.POST.get("Log")
+        password = request.POST.get("pass")
+        try:
+            checkUserLogin = User.objects.get(Login=username, Password=password)
+            if checkUserLogin is not None:
+                MesUser = Message.objects.filter(Username_Id=checkUserLogin.id)
+                return render(request, "CheckMessages/checkmessages.html", {"MessFromUser": MesUser})
+            else:
+                messages.error(request, "Wrong login or password")
+                return HttpResponseRedirect("http://127.0.0.1:8000/CheckMessages/")
+        except User.DoesNotExist:
+            messages.error(request, "Wrong login or password")
+            return HttpResponseRedirect("http://127.0.0.1:8000/CheckMessages/")
+    return HttpResponseRedirect("http://127.0.0.1:8000/CheckMessages/")

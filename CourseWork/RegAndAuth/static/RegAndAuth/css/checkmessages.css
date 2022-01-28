@@ -8,26 +8,14 @@ body{
 #toAuthorize{
     color: rgb(28, 30, 33);
    position: absolute;
-   margin-left: 100px;
-   margin-top: 50px;
-}
-#forMes{
-   height: 90px;
-   width: 300px;
-   position: absolute;
-   left: 100px;
-   top: 20px;
-}
-.messages{
-   color: rgb(255, 85, 97);
-   font-weight: 700;
-   font-size: 15px;
+   left: 65px;
+   top:140px;
 }
 h1{
    color: rgb(255, 255, 255);
-   position: center;
-   margin-left: -20px;
-   margin-bottom:-120;
+   position: absolute;
+   margin-left: -65px;
+   margin-bottom:-190;
    text-align: center;
 }
 #buttons{
@@ -42,22 +30,16 @@ position: absolute;
    position: absolute;
    width: 320px;
    left: 50%;
-   margin-left: -160px;
+   margin-left: -660px;
    top: 40%;
    margin-top: -75px;
-}
-#chosenFile{
-    position:absolute;
-    left:60px;
-    top: 260px;
 }
 .messages{
    color: rgb(255, 85, 97);
    font-weight: 700;
    font-size: 15px;
-   margin-left:25px;
-   margin-top:30px;
-   margin-bottom:2px;
+   margin-left:27px;
+   margin-top:55px;
 }
 /* === Encrypter/Decrypter form === */
 #EncrypterUI {
@@ -115,14 +97,19 @@ position: absolute;
    border-radius: 50px;
    outline: 0;
    z-index: 2;
-   top: 180px;
-   right: -10px;
+   top: 90px;
+   right: 75px;
    border: 6px solid rgb(52, 56, 61);
-   font-size: 19px;
+   font-size: 17px;
    text-indent: 0px;
    padding-left: 9px;
    padding-bottom: 3px;
    text-align: center;
+}
+#table{
+    margin-left: 350px;
+    margin-top: -150px;
+
 }
 #butt:hover{
    color: rgb(0, 126, 165);

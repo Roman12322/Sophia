@@ -8,17 +8,16 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>encrypter</title>
 <!--    указываем ссылку на css file-->
-    <link rel="stylesheet" href="{% static 'RegAndAuth/css/encrypter.css' %}">
+    <link rel="stylesheet" href="{% static 'RegAndAuth/css/checkmessages.css' %}">
 </head>
 <body>
-    <h1>Шифр Виженера</h1>
+    <h1>Просмотр сообщений</h1>
 <div id="wrapper">
-   <form id="EncrypterUI" method="POST" enctype="multipart/form-data" action="Encr">
+   <form id="EncrypterUI" method="POST" action="CheckMessagesInDB">
        {% csrf_token %}
        <input type="text" id="Log" name="Log" placeholder="Введите свой Логин: " />
        <input type="password" id="pass" name="pass" placeholder="Введите свой Пароль: " />
-       {{form.Mess}}
-       {{form.Key}}
+       <div id="forMes">
        {% if messages %}
             <ul class="messages">
                 {% for message in messages %}
@@ -26,14 +25,18 @@
                 {% endfor %}
             </ul>
         {% endif %}
-       <button type="submit" id="butt">Start</button>
-  <div id="buttons">
-    <input type="radio" id="encrRB" name="RB" value="Encrypt" checked> <label for="encrRB">Encrypt</label>
-    <input type="radio" id="decrRB" name="RB" value="Decrypt" > <label for="decrRB">Decrypt</label>
-  </div>
-       <a id="toAuthorize" href="http://127.0.0.1:8000/CheckMessages/">Посмотреть свои сообщения</a>
-       <input type="file" name="chosenFile" id="chosenFile">
+        </div>
+       <button type="submit" id="butt">Посмотреть сообщения</button>
+       <a id="toAuthorize" href="http://127.0.0.1:8000/encrypter">Вернуться к шифрованию</a>
    </form>
+    {% if MessFromUser.count > 0 %}
+    <table id="table">
+        <tr><th>Всe сообщения: </th><th>
+        {% for mess in MessFromUser %}
+        <tr><td>{{ mess.EncryptMessage }}</td><td>
+        {% endfor %}
+    </table>
+    {% endif %}
 </div>
 </body>
 </html>

@@ -8,6 +8,8 @@ urlpatterns = [
                   path('', views.showRegHTML, name="reg"),
                   path('signUpUser/', views.signUpUser, name="signUp"),
                   path('encrypter', views.showEncrypterHTML, name="encrypter"),
-                  path('Encr/', views.Encr, name="Encr"),
+                  path('Encr', views.Encr, name="Encr"),
+                  path('CheckMessages/', views.showCheckMessagesHTML, name="CheckMessages"),
+                  path('CheckMessages/CheckMessagesInDB', views.CheckMessagesInDB, name="checkMessagesInDB")
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
